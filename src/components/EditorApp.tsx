@@ -1,39 +1,50 @@
-import React from 'react';
-import { useStore } from '@/hooks/useStore';
-import CanvasComponent from './CanvasComponent';
-import ImageUploadComponent from './ImageUploadComponent';
-import LayerPanelComponent from './LayerPanelComponent';
+import React from "react";
+import { useStore } from "@/hooks/useStore";
+import CanvasComponent from "./canvas/CanvasComponent";
+import ImageUpload from "./upload/ImageUpload";
+import LayerPanel from "./panels/LayerPanel";
+import PropertiesPanel from "./panels/PropertiesPanel";
+import TopBar from "./panels/TopBar";
 
-/**
- * Main application component that orchestrates the layout of all sub-components.
- * It displays the canvas and layer panel. The toolbar has been removed.
- */
 const EditorApp = () => {
     const { image, canvasDimensions } = useStore();
 
     return (
-        <div className="flex flex-col md:flex-row w-full max-w-7xl mx-auto p-4 md:p-8 space-y-4 md:space-y-0 md:space-x-8 rounded-xl bg-gray-100 shadow-xl min-h-screen">
-            <aside className="w-full md:w-1/4 p-4 space-y-6 flex flex-col">
-                <h1 className="text-3xl font-extrabold text-blue-600 mb-6">Gemini Editor</h1>
-                {/* The toolbar component is no longer rendered here */}
-                <LayerPanelComponent />
-            </aside>
+        <div className="min-h-screen">
+            <TopBar />
+            <div className="mx-auto flex max-w-7xl gap-4 p-4">
+                {/* Left: layers */}
+                <aside className="hidden w-64 shrink-0 lg:block">
+                    <LayerPanel />
+                </aside>
 
-            <main className="flex-1 flex flex-col items-center justify-center p-4">
-                {image ? (
-                    <div
-                        className="rounded-lg shadow-xl overflow-hidden border-2 border-gray-200"
-                        style={{
-                            width: canvasDimensions.width,
-                            height: canvasDimensions.height,
-                        }}
-                    >
-                        <CanvasComponent />
-                    </div>
-                ) : (
-                    <ImageUploadComponent />
-                )}
-            </main>
+                {/* Center: canvas or uploader */}
+                <main className="flex min-h-[70vh] flex-1 items-start justify-center">
+                    {image ? (
+                        <div
+                            className="overflow-auto rounded-xl border-2 border-gray-200 bg-white p-2 shadow"
+                            style={{ maxWidth: "100%", maxHeight: "calc(100vh - 180px)" }}
+                        >
+                            <div
+                                className="inline-block rounded"
+                                style={{
+                                    width: canvasDimensions.width,
+                                    height: canvasDimensions.height
+                                }}
+                            >
+                                <CanvasComponent />
+                            </div>
+                        </div>
+                    ) : (
+                        <ImageUpload />
+                    )}
+                </main>
+
+                {/* Right: properties */}
+                <aside className="hidden w-80 shrink-0 xl:block">
+                    <PropertiesPanel />
+                </aside>
+            </div>
         </div>
     );
 };
