@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-    /* Light mode: clean, airy gradient */
+
     --background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     --foreground: #171717;
 }
@@ -14,14 +14,14 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    /* Dark mode: rich, deep gradient */
+
     :root {
         --background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         --foreground: #ededed;
     }
 }
 
-/* Keyframe for subtle animated background */
+
 @keyframes slowGradientShift {
     0% {
         background-position: 0% 50%;
