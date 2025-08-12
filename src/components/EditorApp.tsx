@@ -12,6 +12,9 @@ const EditorApp = () => {
     return (
         <div className="min-h-screen">
             <TopBar />
+            <div className={`${image ? "hidden" : "m-3 text-xl font-extrabold text-center gradient-text"}`}>
+                Upload your image — edit, move, and style text effortlessly.
+            </div>
             <div className="mx-auto flex max-w-7xl gap-4 p-4">
                 {/* Left: layers */}
                 <aside className="hidden w-64 shrink-0 lg:block">

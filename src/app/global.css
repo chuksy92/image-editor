@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 :root {
-    --background: #ffffff;
+    /* Light mode: clean, airy gradient */
+    --background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     --foreground: #171717;
 }
 
@@ -13,58 +14,38 @@
 }
 
 @media (prefers-color-scheme: dark) {
+    /* Dark mode: rich, deep gradient */
     :root {
-        --background: #0a0a0a;
+        --background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         --foreground: #ededed;
     }
 }
 
-body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+/* Keyframe for subtle animated background */
+@keyframes slowGradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6); /* Blue → Purple */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*@tailwind base;*/
-/*@tailwind components;*/
-/*@tailwind utilities;*/
-
-/*body {*/
-/*  @apply bg-slate-50 text-slate-900 font-sans antialiased;*/
-/*}*/
-
-/*@font-face {*/
-/*  font-family: 'Roboto';*/
-/*  src: url('https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxK.woff2') format('woff2');*/
-/*  font-weight: 400;*/
-/*  font-style: normal;*/
-/*}*/
-
-/*@font-face {*/
-/*  font-family: 'Montserrat';*/
-/*  src: url('https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHJ_C_xgs.woff2') format('woff2');*/
-/*  font-weight: 400;*/
-/*  font-style: normal;*/
-/*}*/
+body {
+    background: var(--background);
+    background-size: 200% 200%;
+    animation: slowGradientShift 20s ease infinite;
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
+}

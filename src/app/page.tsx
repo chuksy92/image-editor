@@ -59,7 +59,7 @@ export default function Home() {
     if (!ready) {
         return (
             <div className="flex min-h-screen items-center justify-center">
-                <div className="rounded-xl border bg-white px-6 py-4 shadow">Loading editor…</div>
+                <div className="rounded-xl border  px-6 py-4 shadow">Loading editor…</div>
             </div>
         );
     }
