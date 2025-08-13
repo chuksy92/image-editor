@@ -67,13 +67,25 @@ const CanvasComponent: React.FC = () => {
         return () => cancelAnimationFrame(id);
     }, [layers]);
 
+    useEffect(() => {
+        const el = stageRef.current?.container();
+        if (!el) return;
+        // start with default cursor
+        el.classList.add("konva-cursor-default");
+        return () => {
+            el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
+        };
+    }, []);
+
     /**
      * Deselect when clicking the true background (the Stage).
      * We use mouse events only because the app is desktop-only.
      */
     const handleStageMouseDown = useCallback(
         (e: Konva.KonvaEventObject<MouseEvent>) => {
-            if (e.target === e.target.getStage()) setSelectedLayer(null);
+            if (e.target === e.target.getStage() || e.target.getClassName() === "Image") {
+                setSelectedLayer(null);
+            }
         },
         [setSelectedLayer]
     );

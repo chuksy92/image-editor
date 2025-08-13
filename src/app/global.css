@@ -41,6 +41,10 @@
     background-clip: text;
 }
 
+.konva-cursor-default { cursor: default !important}
+.konva-cursor-grab { cursor: grab !important}
+.konva-cursor-grabbing { cursor: grabbing !important}
+
 
 body {
     background: var(--background);

@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Rect, Text, Transformer } from "react-konva";
 import Konva from "konva";
@@ -10,15 +9,15 @@ type Props = {
     onSelect: () => void;
 };
 
-const HIT_PAD = 8;
-const TEXT_MIN_SIZE = 20;
+const HIT_PAD = 8;          // generous hit padding for easy grabbing
+const TEXT_MIN_SIZE = 20;   // prevent collapsing on transform
 
 const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
     const groupRef = useRef<Konva.Group>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const update = useStore((s) => s.updateTextLayer);
 
-    // Live position during drag to prevent snap-back
+    // Live position during drag to avoid snap-back
     const [livePos, setLivePos] = useState<{ x: number; y: number } | null>(null);
     const rafId = useRef<number | null>(null);
 
@@ -31,6 +30,7 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
         [layer.height]
     );
 
+    // Attach transformer to GROUP when selected
     useEffect(() => {
         if (!isSelected) return;
         const tr = trRef.current;
@@ -40,7 +40,7 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
         tr.getLayer()?.batchDraw();
     }, [isSelected]);
 
-    // clear livePos only after store catches up
+    // Clear livePos only after store catches up with final coords
     useEffect(() => {
         if (!livePos) return;
         if (Math.abs(livePos.x - layer.x) < 0.001 && Math.abs(livePos.y - layer.y) < 0.001) {
@@ -48,61 +48,85 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
         }
     }, [layer.x, layer.y, livePos]);
 
-    const setCursor = useCallback((cursor: string) => {
+    // 🔧 Reliable cursor on the Stage container via classes
+    const setCursor = useCallback((cursor: "default" | "grab" | "grabbing") => {
         const stage = groupRef.current?.getStage();
-        const container = stage?.container();
-        if (container) container.style.cursor = cursor;
-        // fallback if any global CSS overrides canvas cursor
-        document.body.style.cursor = cursor;
+        const el = stage?.container();
+        if (!el) return;
+        el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
+        if (cursor === "grab") el.classList.add("konva-cursor-grab");
+        else if (cursor === "grabbing") el.classList.add("konva-cursor-grabbing");
+        else el.classList.add("konva-cursor-default");
     }, []);
 
-    const handleDragEnd = useCallback(() => {
-        const g = groupRef.current;
-        if (!g) return;
-        if (rafId.current) {
-            cancelAnimationFrame(rafId.current);
-            rafId.current = null;
-        }
-        const finalX = g.x();
-        const finalY = g.y();
-        setCursor("grab");
-        setLivePos({ x: finalX, y: finalY });          // keep position steady
-        update({ id: layer.id, x: finalX, y: finalY }); // persist to store
-        // livePos will clear when store matches (effect above)
-    }, [layer.id, setCursor, update]);
-
-    // ✨ Only select if not already selected
     const handleMouseDown = useCallback(
         (e: Konva.KonvaEventObject<MouseEvent>) => {
             e.cancelBubble = true;
-            setCursor("grabbing");
+
             const g = groupRef.current;
             if (!g) return;
 
+            // 1) put this group on top so it receives all subsequent events
+            g.moveToTop();
+            g.getLayer()?.batchDraw();
+
+            // 2) cursor + immediate drag
+            setCursor("grabbing");
             g.stopDrag();
             g.startDrag();
             setLivePos({ x: g.x(), y: g.y() });
 
-            if (!isSelected) {
-                // defer selection so initial drag isn't interrupted by a re-render
-                requestAnimationFrame(() => {
-                    onSelect();
-                });
-            }
+            // 3) defer selection to next frame to avoid re-render interrupting the drag
+            if (!isSelected) requestAnimationFrame(onSelect);
         },
         [isSelected, onSelect, setCursor]
     );
 
+    // rAF-throttled live position while dragging
+    const handleDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+        const g = e.target as Konva.Group;
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rafId.current = requestAnimationFrame(() => {
+            setLivePos({ x: g.x(), y: g.y() });
+        });
+    }, []);
 
+    const handleDragStart = useCallback(() => {
+        setCursor("grabbing");
+    }, [setCursor]);
+
+    const handleDragEnd = useCallback(() => {
+        const g = groupRef.current;
+        if (!g) return;
+
+        if (rafId.current) {
+            cancelAnimationFrame(rafId.current);
+            rafId.current = null;
+        }
+
+        const finalX = g.x();
+        const finalY = g.y();
+
+        // Hold visually steady until store reflects it
+        setLivePos({ x: finalX, y: finalY });
+        setCursor("grab");
+
+        update({ id: layer.id, x: finalX, y: finalY });
+    }, [layer.id, setCursor, update]);
+
+    // Normalize transform → width/height + rotation; reset scale
     const handleTransformEnd = useCallback(() => {
         const g = groupRef.current;
         if (!g) return;
+
         const sx = g.scaleX();
         const sy = g.scaleY();
         const nextWidth = Math.max(TEXT_MIN_SIZE, layer.width * sx);
         const nextHeight = Math.max(TEXT_MIN_SIZE, layer.height * sy);
+
         g.scaleX(1);
         g.scaleY(1);
+
         update({
             id: layer.id,
             x: g.x(),
@@ -113,6 +137,7 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
         });
     }, [layer.height, layer.id, layer.width, update]);
 
+    // Drive the Group with live position while dragging
     const x = livePos?.x ?? layer.x;
     const y = livePos?.y ?? layer.y;
 
@@ -133,20 +158,23 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
                     if (!groupRef.current?.isDragging()) setCursor("default");
                 }}
                 onMouseDown={handleMouseDown}
-                onDragStart={() => setCursor("grabbing")}
+                onDragStart={handleDragStart}
+                onDragMove={handleDragMove}
                 onMouseUp={() => setCursor("grab")}
                 onDragEnd={handleDragEnd}
             >
+                {/* generous invisible hit area so grabbing is easy */}
                 <Rect
                     x={-HIT_PAD}
                     y={-HIT_PAD}
                     width={widthWithPad}
                     height={heightWithPad}
-                    fill="rgba(0,0,0,0.002)"   // slightly > 0 alpha; ensures Konva builds a hit region
+                    fill="rgba(0,0,0,0.002)"  // >0 alpha => Konva builds a hit region
                     listening
-                    hitStrokeWidth={HIT_PAD}   // extra forgiveness for edges
+                    hitStrokeWidth={HIT_PAD}
                 />
 
+                {/* actual text; all events handled on the Group */}
                 <Text
                     x={0}
                     y={0}

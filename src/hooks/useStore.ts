@@ -1,9 +1,8 @@
+
 // src/hooks/useStore.ts
 import { create } from "zustand";
-import type Konva from "konva";          // type-only import (no runtime cost)
-import type React from "react";           // type-only import
-
-// ----- Types -----
+import type Konva from "konva";
+import type React from "react";
 
 export type Align = "left" | "center" | "right";
 
@@ -23,6 +22,11 @@ export interface TextLayer {
     opacity: number; // 0..1
 }
 
+export interface CustomFont {
+    family: string;
+    url: string;
+}
+
 interface EditorState {
     // Canvas / image
     image: File | null;
@@ -34,6 +38,14 @@ interface EditorState {
     layers: TextLayer[];
     selectedLayerId: string | null;
 
+    // Fonts
+    customFonts: CustomFont[];
+    addCustomFont: (font: CustomFont) => void;
+
+    // Drag priming (auto-start drag for a specific layer)
+    startDragId: string | null;
+    clearStartDrag: () => void;
+
     // Setters / refs
     setImage: (file: File | null) => void;
     setImageObject: (img: HTMLImageElement | null) => void;
@@ -42,18 +54,15 @@ interface EditorState {
 
     // Layer ops
     addTextLayer: () => void;
-    updateTextLayer: (patch: Partial<TextLayer> & { id: string }) => void; // merge patch
+    updateTextLayer: (patch: Partial<TextLayer> & { id: string }) => void;
     setSelectedLayer: (id: string | null) => void;
     reorderLayers: (newLayers: TextLayer[]) => void;
-
     deleteSelected: () => void;
     duplicateSelected: () => void;
 
     // Export
     exportImage: () => void;
 }
-
-// ----- Utilities -----
 
 const makeId = (): string =>
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -76,8 +85,6 @@ const createDefaultTextLayer = (id: string): TextLayer => ({
     opacity: 1,
 });
 
-// ----- Store -----
-
 export const useStore = create<EditorState>((set, get) => ({
     // canvas / image
     image: null,
@@ -89,6 +96,14 @@ export const useStore = create<EditorState>((set, get) => ({
     layers: [],
     selectedLayerId: null,
 
+    // fonts
+    customFonts: [],
+    addCustomFont: (font) => set((s) => ({ customFonts: [...s.customFonts, font] })),
+
+    // drag priming
+    startDragId: null,
+    clearStartDrag: () => set({ startDragId: null }),
+
     // setters
     setImage: (file) => set({ image: file }),
     setImageObject: (img) => set({ imageObject: img }),
@@ -96,14 +111,35 @@ export const useStore = create<EditorState>((set, get) => ({
     setStageRef: (ref) => set({ stageRef: ref }),
 
     // layer ops
+
     addTextLayer: () => {
         const id = makeId();
-        const newLayer = createDefaultTextLayer(id);
-        set((s) => ({
+        const s = get();
+        const n = s.layers.length;
+        const offset = Math.min(n, 8) * 24; // cap the offset growth a bit
+
+        const newLayer: TextLayer = {
+            id,
+            x: 60 + offset,
+            y: 60 + offset,
+            text: "Double-click to edit",
+            fontSize: 36,
+            fontFamily: "Inter",
+            fill: "#111827",
+            rotation: 0,
+            width: 300,
+            height: 60,
+            fontStyle: "normal",
+            align: "left",
+            opacity: 1,
+        };
+
+        set({
             layers: [...s.layers, newLayer],
             selectedLayerId: id,
-        }));
+        });
     },
+
 
     /**
      * Merge-patch a layer by id.
@@ -128,12 +164,8 @@ export const useStore = create<EditorState>((set, get) => ({
             if (!id) return {};
             const idx = s.layers.findIndex((l) => l.id === id);
             if (idx < 0) return {};
-
             const layers = s.layers.filter((l) => l.id !== id);
-
-            // Choose a reasonable next selection (previous index, clamped)
             const next = layers[Math.max(0, Math.min(idx, layers.length - 1))] || null;
-
             return { layers, selectedLayerId: next?.id ?? null };
         }),
 
@@ -143,13 +175,14 @@ export const useStore = create<EditorState>((set, get) => ({
             if (!src) return {};
             const id = makeId();
             const copy: TextLayer = { ...src, id, x: src.x + 24, y: src.y + 24 };
-            return { layers: [...s.layers, copy], selectedLayerId: id };
+            return { layers: [...s.layers, copy], selectedLayerId: id, startDragId: id };
         }),
 
     /**
      * Export the current stage content to PNG at the stage's current size.
      * (Preserves original image dimensions since Stage matches the image.)
      */
+
     exportImage: () => {
         const { stageRef, imageObject } = get();
         const stage = stageRef?.current;
@@ -165,3 +198,4 @@ export const useStore = create<EditorState>((set, get) => ({
         document.body.removeChild(link);
     },
 }));
+

@@ -39,7 +39,7 @@ const PropertiesPanel = () => {
                     <textarea
                         value={layer.text}
                         onChange={(e) => set("text", e.target.value)}
-                        className="w-full resize-none rounded-md border px-3 py-2 text-sm outline-none"
+                        className="w-full text-gray-600 resize-none rounded-md border px-3 py-2 text-sm outline-none"
                         rows={4}
                     />
                 </label>
@@ -50,7 +50,7 @@ const PropertiesPanel = () => {
                         <select
                             value={layer.fontFamily}
                             onChange={(e) => set("fontFamily", e.target.value)}
-                            className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                            className="w-full text-gray-600 rounded-md border px-3 py-2 text-sm outline-none"
                         >
                             {FONT_FAMILIES.map((f) => (
                                 <option key={f} value={f}>
@@ -68,7 +68,7 @@ const PropertiesPanel = () => {
                             max={512}
                             value={layer.fontSize}
                             onChange={(e) => set("fontSize", Number(e.target.value))}
-                            className="w-full rounded-md border px-2 py-2 text-sm outline-none"
+                            className="w-full text-gray-600 rounded-md border px-2 py-2 text-sm outline-none"
                         />
                     </label>
                 </Row>
@@ -76,13 +76,13 @@ const PropertiesPanel = () => {
                 <Row>
                     <button
                         onClick={() => toggleStyle("bold")}
-                        className={`rounded-md border px-3 py-2 text-sm ${layer.fontStyle.includes("bold") ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
+                        className={`rounded-md border px-3 py-2 text-sm text-gray-600 ${layer.fontStyle.includes("bold") ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
                     >
                         Bold
                     </button>
                     <button
                         onClick={() => toggleStyle("italic")}
-                        className={`rounded-md border px-3 py-2 text-sm ${
+                        className={`rounded-md border px-3 py-2 text-sm text-gray-600 ${
                             layer.fontStyle.includes("italic") ? "border-blue-500 bg-blue-50" : "bg-gray-100"
                         }`}
                     >
@@ -92,21 +92,21 @@ const PropertiesPanel = () => {
                     <div className="ml-auto flex items-center gap-2">
                         <button
                             onClick={() => setAlign("left")}
-                            className={`rounded-md border px-2 py-2 text-sm ${layer.align === "left" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
+                            className={`rounded-md border px-2 py-2 text-sm text-gray-600 ${layer.align === "left" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
                             title="Align left"
                         >
                             ⬅
                         </button>
                         <button
                             onClick={() => setAlign("center")}
-                            className={`rounded-md border px-2 py-2 text-sm ${layer.align === "center" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
+                            className={`rounded-md border px-2 py-2 text-sm text-gray-600 ${layer.align === "center" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
                             title="Align center"
                         >
                             ⬍
                         </button>
                         <button
                             onClick={() => setAlign("right")}
-                            className={`rounded-md border px-2 py-2 text-sm ${layer.align === "right" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
+                            className={`rounded-md border px-2 py-2 text-sm text-gray-600 ${layer.align === "right" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
                             title="Align right"
                         >
                             ➡
@@ -141,7 +141,7 @@ const PropertiesPanel = () => {
                             type="number"
                             value={layer.rotation}
                             onChange={(e) => set("rotation", Number(e.target.value))}
-                            className="w-full rounded-md border px-2 py-2 text-sm outline-none"
+                            className="w-full rounded-md border px-2 py-2 text-sm text-gray-600 outline-none"
                         />
                     </label>
                     <label className="flex-1">
@@ -151,7 +151,7 @@ const PropertiesPanel = () => {
                             min={20}
                             value={Math.round(layer.width)}
                             onChange={(e) => set("width", Number(e.target.value))}
-                            className="w-full rounded-md border px-2 py-2 text-sm outline-none"
+                            className="w-full rounded-md border px-2 py-2 text-sm text-gray-600 outline-none"
                         />
                     </label>
                 </Row>

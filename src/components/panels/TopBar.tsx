@@ -21,13 +21,7 @@ const TopBar = () => {
                         <button onClick={deleteSelected} className="rounded-lg border px-3 py-2 text-sm hover:bg-blue-500">
                             Delete
                         </button>
-                        <div className="mx-2 h-6 w-px bg-gray-300" />
-                        <button onClick={undefined} className="rounded-lg border px-3 py-2 text-sm hover:bg-blue-500" title="Bring forward">
-                            Bring ↑
-                        </button>
-                        <button onClick={undefined} className="rounded-lg border px-3 py-2 text-sm hover:bg-blue-500" title="Send backward">
-                            Send ↓
-                        </button>
+
                         <div className="mx-2 h-6 w-px bg-gray-300" />
                         <button onClick={exportImage} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-emerald-700">
                             Export PNG

@@ -46,7 +46,7 @@ const LayerPanel = () => {
     };
 
     return (
-        <div className="h-[calc(100vh-140px)] overflow-auto rounded-lg bg-white p-4 shadow">
+        <div className="max-h-[calc(100vh-140px)] overflow-auto rounded-lg bg-white p-4 shadow">
             <div className="mb-3 text-sm font-semibold text-slate-500">Layers</div>
             <ul className="flex flex-col-reverse gap-2">
                 {layers.map((l) => (
