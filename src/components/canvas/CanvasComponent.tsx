@@ -1,6 +1,6 @@
 "use client"
 import React, {useCallback, useEffect, useMemo, useRef} from "react";
-import Konva from "konva";
+import type { Group as KonvaGroup } from "konva/lib/Group";
 import {Image as KonvaImage, Layer, Stage} from "react-konva";
 import type { Stage as KonvaStage } from "konva/lib/Stage";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -134,7 +134,7 @@ const CanvasComponent: React.FC = () => {
                     if (!id) return;
 
                     // We move the Group (TextLayerNode sets id on its Group)
-                    const node = stage.findOne(`#${id}`) as Konva.Group | null;
+                    const node = stage.findOne(`#${id}`) as KonvaGroup | null;
                     if (!node) return;
 
                     e.preventDefault();
