@@ -1,55 +1,56 @@
 "use client";
 
 import React, { useRef } from "react";
-import { loadCustomFontFromFile } from "@/lib/loadCustomFont";
 import { useStore } from "@/hooks/useStore";
+import { loadCustomFontFromFile } from "@/lib/loadCustomFont";
+import { toast } from "react-hot-toast";
 
-const ACCEPT = ".ttf,.otf,.woff,.woff2";
+type Props = {
+    className?: string;
+    label?: string;
+};
 
-const FontUploadButton: React.FC = () => {
+const FontUploadButton: React.FC<Props> = ({ className, label = "Upload font (TTF/OTF/WOFF)" }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const addCustomFont = useStore((s) => s.addCustomFont);
-    const stageRef = useStore((s) => s.stageRef);
 
-    const handlePick = () => inputRef.current?.click();
+    const onPick = () => inputRef.current?.click();
 
-    const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const onChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         try {
-            const { family, url } = await loadCustomFontFromFile(file);
-            addCustomFont({ family, url });
-
-            // Force a redraw so Konva uses the newly available font
-            stageRef?.current?.batchDraw();
-
-            // Reset input so user can upload the same file again if needed
-            e.currentTarget.value = "";
-        } catch (err: any) {
-            console.error(err);
-            alert(err?.message || "Failed to load font.");
+            const loaded = await loadCustomFontFromFile(file);
+            addCustomFont({ family: loaded.family, url: loaded.url });
+            toast.success(`Loaded font: ${loaded.family}`);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to load font.";
+            toast.error(msg);
+        } finally {
+            // allow re-selecting the same file
+            if (inputRef.current) inputRef.current.value = "";
         }
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <>
             <button
                 type="button"
-                onClick={handlePick}
-                className="rounded-lg px-3 py-2 text-sm font-medium bg-white text-gray-600 shadow border hover:bg-slate-50"
-                title="Upload custom font (TTF/OTF/WOFF/WOFF2)"
+                onClick={onPick}
+                className={className ?? "px-3 py-2 text-sm rounded border hover:bg-gray-50"}
             >
-                + Upload Font
+                {label}
             </button>
             <input
                 ref={inputRef}
                 type="file"
-                accept={ACCEPT}
-                className="hidden"
-                onChange={handleChange}
+                accept=".ttf,.otf,.woff,.woff2"
+                onChange={onChange}
+                hidden
+                aria-label="Upload custom font"
             />
-        </div>
+        </>
     );
 };
 

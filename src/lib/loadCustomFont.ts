@@ -1,24 +1,40 @@
-export async function loadCustomFontFromFile(file: File): Promise<{ family: string; url: string }> {
-    const extOk = /\.(ttf|otf|woff2?|TTF|OTF|WOFF2?)$/.test(file.name);
-    if (!extOk) throw new Error("Unsupported font type. Please upload TTF, OTF, WOFF, or WOFF2.");
 
-    // Derive a readable family name from the file name
-    const base = file.name.replace(/\.(ttf|otf|woff2?|TTF|OTF|WOFF2?)$/, "");
-    const family = base.replace(/[-_]+/g, " ").trim() || "Custom Font";
+/**
+ * Load a custom font file (TTF/OTF/WOFF/WOFF2) using the FontFace API,
+ * register it in document. Fonts, and return its family + object URL.
+ */
+export type LoadedFont = {
+    family: string;
+    url: string; // object URL created for the file
+};
 
+const SUPPORTED_EXTENSIONS = new Set(["ttf", "otf", "woff", "woff2"]);
+
+export function inferFamilyName(filename: string): string {
+    const base = filename.replace(/\.[^.]+$/, "");
+    // Normalize a bit (optional)
+    return base.replace(/[_\-]+/g, " ").trim();
+}
+
+export async function loadCustomFontFromFile(file: File, familyOverride?: string): Promise<LoadedFont> {
+    const name = file.name.toLowerCase();
+    const ext = name.split(".").pop();
+    if (!ext || !SUPPORTED_EXTENSIONS.has(ext)) {
+        throw new Error("Unsupported font file. Please upload TTF, OTF, WOFF, or WOFF2.");
+    }
+
+    const family = familyOverride?.trim() || inferFamilyName(file.name);
     const url = URL.createObjectURL(file);
 
-    // Use the FontFace API to load and register
-    const font = new FontFace(family, `url(${url})`, { style: "normal", weight: "400" });
-    const loaded = await font.load();
-    (document as any).fonts.add(loaded); // document.fonts is a FontFaceSet
+    // FontFace is part of the DOM lib, so no `any` is needed
+    const fontFace = new FontFace(family, `url(${url})`);
 
-    // Optionally: Ensure the browser is ready to render this font at a reasonable size
-    try {
-        await (document as any).fonts.load(`16px "${family}"`);
-    } catch {
-        // non-fatal; some browsers may not reject properly
-    }
+    // load + register
+    await fontFace.load();
+    document.fonts.add(fontFace);
 
     return { family, url };
 }
+
+
+loadCustomFontFromFile

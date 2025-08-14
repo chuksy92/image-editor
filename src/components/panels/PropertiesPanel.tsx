@@ -1,160 +1,196 @@
 "use client";
 
-import React from "react";
-import { FONT_FAMILIES } from "@/lib/fonts";
-import { Align, useStore } from "@/hooks/useStore";
+import React, { useMemo } from "react";
+import { Align, TextLayer, useStore } from "@/hooks/useStore";
 
-const Row = ({ children }: { children: React.ReactNode }) => <div className="flex items-center gap-3">{children}</div>;
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
-const PropertiesPanel = () => {
-    const { layers, selectedLayerId, updateTextLayer } = useStore();
-    const layer = layers.find((l) => l.id === selectedLayerId);
+const FONT_STYLES: TextLayer["fontStyle"][] = ["normal", "bold", "italic", "bold italic"];
+const ALIGNS: Align[] = ["left", "center", "right"];
+
+const PropertiesPanel: React.FC = () => {
+    const layers = useStore((s) => s.layers);
+    const selectedLayerId = useStore((s) => s.selectedLayerId);
+    const update = useStore((s) => s.updateTextLayer);
+    const toggleLock = useStore((s) => s.toggleLayerLock);
+
+    const layer = useMemo(
+        () => layers.find((l) => l.id === selectedLayerId) ?? null,
+        [layers, selectedLayerId]
+    );
 
     if (!layer) {
-        return (
-            <div className="rounded-lg bg-white p-4 shadow">
-                <div className="text-sm text-slate-500">Select a text layer to edit its properties.</div>
-            </div>
-        );
+        return <div className="p-3 text-sm opacity-80">Select a text layer to edit its properties.</div>;
     }
 
-    const set = <K extends keyof typeof layer>(key: K, value: (typeof layer)[K]) => updateTextLayer({ id: layer.id, [key]: value } as any);
+    const onText: React.ChangeEventHandler<HTMLTextAreaElement> = (e) =>
+        update({ id: layer.id, text: e.target.value });
 
-    const toggleStyle = (token: "bold" | "italic") => {
-        const parts = new Set(layer.fontStyle.split(" ").filter(Boolean));
-        parts.has(token) ? parts.delete(token) : parts.add(token);
-        const val = Array.from(parts).join(" ") || "normal";
-        set("fontStyle", val as any);
+    const onFontFamily: React.ChangeEventHandler<HTMLInputElement> = (e) =>
+        update({ id: layer.id, fontFamily: e.target.value });
+
+    const onFontSize: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const v = clamp(parseInt(e.target.value || "0", 10), 1, 1000);
+        update({ id: layer.id, fontSize: v });
     };
 
-    const setAlign = (a: Align) => set("align", a);
+    const onFontStyle: React.ChangeEventHandler<HTMLSelectElement> = (e) =>
+        update({ id: layer.id, fontStyle: e.target.value as TextLayer["fontStyle"] });
+
+    const onColor: React.ChangeEventHandler<HTMLInputElement> = (e) =>
+        update({ id: layer.id, fill: e.target.value });
+
+    const onOpacity: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const v = clamp(parseFloat(e.target.value || "1"), 0, 1);
+        update({ id: layer.id, opacity: v });
+    };
+
+    const onAlign: React.ChangeEventHandler<HTMLSelectElement> = (e) =>
+        update({ id: layer.id, align: e.target.value as Align });
+
+    const onLineHeight: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const v = clamp(parseFloat(e.target.value || "1"), 0.5, 4);
+        update({ id: layer.id, lineHeight: v });
+    };
+
+    const onLetterSpacing: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const v = clamp(parseFloat(e.target.value || "0"), -5, 20);
+        update({ id: layer.id, letterSpacing: v });
+    };
 
     return (
-        <div className="h-[calc(100vh-140px)] overflow-auto rounded-lg bg-white p-4 shadow">
-            <div className="mb-3 text-sm font-semibold text-slate-500">Text Properties</div>
+        <div className="flex flex-col gap-3 p-3 border rounded-md text-slate-500">
+            <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Properties</div>
+                <button
+                    className="px-2 py-1 text-xs rounded border"
+                    onClick={() => toggleLock(layer.id)}
+                    title={layer.locked ? "Unlock layer" : "Lock layer"}
+                >
+                    {layer.locked ? "Unlock" : "Lock"}
+                </button>
+            </div>
 
-            <div className="space-y-4">
-                <label className="block">
-                    <span className="mb-1 block text-xs font-medium text-slate-600">Content</span>
-                    <textarea
-                        value={layer.text}
-                        onChange={(e) => set("text", e.target.value)}
-                        className="w-full text-gray-600 resize-none rounded-md border px-3 py-2 text-sm outline-none"
-                        rows={4}
+            {/* Text content */}
+            <label className="flex flex-col gap-1 text-sm">
+                <span>Text</span>
+                <textarea
+                    value={layer.text}
+                    onChange={onText}
+                    className="min-h-[80px] resize-y rounded border px-2 py-1"
+                />
+            </label>
+
+            {/* Typography */}
+            <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Font family</span>
+                    <input
+                        type="text"
+                        value={layer.fontFamily}
+                        onChange={onFontFamily}
+                        className="rounded border px-2 py-1"
+                        placeholder="Inter, Roboto, etc."
                     />
                 </label>
 
-                <Row>
-                    <label className="flex-1">
-                        <span className="mb-1 block text-xs font-medium text-slate-600">Font Family</span>
-                        <select
-                            value={layer.fontFamily}
-                            onChange={(e) => set("fontFamily", e.target.value)}
-                            className="w-full text-gray-600 rounded-md border px-3 py-2 text-sm outline-none"
-                        >
-                            {FONT_FAMILIES.map((f) => (
-                                <option key={f} value={f}>
-                                    {f}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Font size</span>
+                    <input
+                        type="number"
+                        min={1}
+                        max={1000}
+                        value={layer.fontSize}
+                        onChange={onFontSize}
+                        className="rounded border px-2 py-1"
+                    />
+                </label>
 
-                    <label className="w-28">
-                        <span className="mb-1 block text-xs font-medium text-slate-600">Size</span>
-                        <input
-                            type="number"
-                            min={6}
-                            max={512}
-                            value={layer.fontSize}
-                            onChange={(e) => set("fontSize", Number(e.target.value))}
-                            className="w-full text-gray-600 rounded-md border px-2 py-2 text-sm outline-none"
-                        />
-                    </label>
-                </Row>
-
-                <Row>
-                    <button
-                        onClick={() => toggleStyle("bold")}
-                        className={`rounded-md border px-3 py-2 text-sm text-gray-600 ${layer.fontStyle.includes("bold") ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Font style</span>
+                    <select
+                        value={layer.fontStyle}
+                        onChange={onFontStyle}
+                        className="rounded border px-2 py-1"
                     >
-                        Bold
-                    </button>
-                    <button
-                        onClick={() => toggleStyle("italic")}
-                        className={`rounded-md border px-3 py-2 text-sm text-gray-600 ${
-                            layer.fontStyle.includes("italic") ? "border-blue-500 bg-blue-50" : "bg-gray-100"
-                        }`}
+                        {FONT_STYLES.map((s) => (
+                            <option key={s} value={s}>
+                                {s}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Alignment</span>
+                    <select
+                        value={layer.align}
+                        onChange={onAlign}
+                        className="rounded border px-2 py-1"
                     >
-                        Italic
-                    </button>
+                        {ALIGNS.map((a) => (
+                            <option key={a} value={a}>
+                                {a}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            </div>
 
-                    <div className="ml-auto flex items-center gap-2">
-                        <button
-                            onClick={() => setAlign("left")}
-                            className={`rounded-md border px-2 py-2 text-sm text-gray-600 ${layer.align === "left" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
-                            title="Align left"
-                        >
-                            ⬅
-                        </button>
-                        <button
-                            onClick={() => setAlign("center")}
-                            className={`rounded-md border px-2 py-2 text-sm text-gray-600 ${layer.align === "center" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
-                            title="Align center"
-                        >
-                            ⬍
-                        </button>
-                        <button
-                            onClick={() => setAlign("right")}
-                            className={`rounded-md border px-2 py-2 text-sm text-gray-600 ${layer.align === "right" ? "border-blue-500 bg-blue-50" : "bg-gray-100"}`}
-                            title="Align right"
-                        >
-                            ➡
-                        </button>
-                    </div>
-                </Row>
+            {/* Color & opacity */}
+            <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Color</span>
+                    <input
+                        type="color"
+                        value={layer.fill}
+                        onChange={onColor}
+                        className="h-10 w-full rounded border"
+                    />
+                </label>
 
-                <Row>
-                    <label className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-600">Color</span>
-                        <input type="color" value={layer.fill} onChange={(e) => set("fill", e.target.value)} />
-                    </label>
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Opacity</span>
+                    <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={layer.opacity}
+                        onChange={onOpacity}
+                        className="w-full"
+                    />
+                    <span className="text-xs opacity-70">{Math.round(layer.opacity * 100)}%</span>
+                </label>
+            </div>
 
-                    <label className="ml-auto flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-600">Opacity</span>
-                        <input
-                            type="range"
-                            min={0}
-                            max={1}
-                            step={0.01}
-                            value={layer.opacity}
-                            onChange={(e) => set("opacity", Number(e.target.value))}
-                        />
-                        <span className="w-10 text-right text-xs">{Math.round(layer.opacity * 100)}%</span>
-                    </label>
-                </Row>
+            {/* Advanced typography */}
+            <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Line height</span>
+                    <input
+                        type="number"
+                        step={0.1}
+                        min={0.5}
+                        max={4}
+                        value={layer.lineHeight}
+                        onChange={onLineHeight}
+                        className="rounded border px-2 py-1"
+                    />
+                </label>
 
-                <Row>
-                    <label className="w-28">
-                        <span className="mb-1 block text-xs font-medium text-slate-600">Rotate</span>
-                        <input
-                            type="number"
-                            value={layer.rotation}
-                            onChange={(e) => set("rotation", Number(e.target.value))}
-                            className="w-full rounded-md border px-2 py-2 text-sm text-gray-600 outline-none"
-                        />
-                    </label>
-                    <label className="flex-1">
-                        <span className="mb-1 block text-xs font-medium text-slate-600">Width</span>
-                        <input
-                            type="number"
-                            min={20}
-                            value={Math.round(layer.width)}
-                            onChange={(e) => set("width", Number(e.target.value))}
-                            className="w-full rounded-md border px-2 py-2 text-sm text-gray-600 outline-none"
-                        />
-                    </label>
-                </Row>
+                <label className="flex flex-col gap-1 text-sm">
+                    <span>Letter spacing (px)</span>
+                    <input
+                        type="number"
+                        step={0.5}
+                        min={-5}
+                        max={20}
+                        value={layer.letterSpacing}
+                        onChange={onLetterSpacing}
+                        className="rounded border px-2 py-1"
+                    />
+                </label>
             </div>
         </div>
     );
