@@ -1,4 +1,3 @@
-// src/components/upload/ImageUpload.tsx
 import React, { useRef, useState } from "react";
 import { useStore } from "@/hooks/useStore";
 
@@ -10,6 +9,7 @@ const ImageUpload = () => {
     const onFile = (file?: File) => {
         if (!file) return;
         if (file.type !== "image/png") {
+            // Could use a toast for proper UX
             alert("Please upload a PNG image.");
             return;
         }

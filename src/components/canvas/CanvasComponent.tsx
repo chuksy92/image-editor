@@ -1,7 +1,9 @@
-
+"use client"
 import React, {useCallback, useEffect, useMemo, useRef} from "react";
 import Konva from "konva";
 import {Image as KonvaImage, Layer, Stage} from "react-konva";
+import type { Stage as KonvaStage } from "konva/lib/Stage";
+import type { KonvaEventObject } from "konva/lib/Node";
 import {useStore} from "@/hooks/useStore";
 import TextLayerNode from "./TextLayerNode";
 
@@ -21,14 +23,13 @@ const CanvasComponent: React.FC = () => {
         selectedLayerId,
         setCanvasDimensions,
         setSelectedLayer,
-        setSelectedAndPrimeDrag,
         setStageRef,
         setImageObject,
         deleteSelected,
         duplicateSelected,
     } = useStore();
 
-    const stageRef = useRef<Konva.Stage>(null);
+    const stageRef = useRef<KonvaStage>(null);
 
     // Expose Stage to the store (for export and tooling)
     useEffect(() => {
@@ -73,26 +74,18 @@ const CanvasComponent: React.FC = () => {
 
     // Batch a redraw whenever layer geometry changes (refresh Konva's hit graph).
     useEffect(() => {
-        // use rAF to avoid drawing mid-commit
         const id = requestAnimationFrame(() => stageRef.current?.batchDraw());
         return () => cancelAnimationFrame(id);
     }, [layers]);
 
 
-    //
-    // useEffect(() => {
-    //     const el = stageRef.current?.container();
-    //     if (!el) return;
-    //     el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
-    //     el.classList.add("konva-cursor-default");
-    // }, []);
 
     /**
      * Deselect when clicking the true background (the Stage).
      * We use mouse events only because the app is desktop-only.
      */
     const handleStageMouseDown = useCallback(
-        (e: Konva.KonvaEventObject<MouseEvent>) => {
+        (e: KonvaEventObject <MouseEvent>) => {
             if (e.target === e.target.getStage() || e.target.getClassName() === "Image") {
                 setSelectedLayer(null);
             }

@@ -1,4 +1,3 @@
-// src/components/panels/StylePanel.tsx
 "use client";
 
 import React from "react";

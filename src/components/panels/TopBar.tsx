@@ -3,7 +3,6 @@ import React from "react";
 import { useStore } from "@/hooks/useStore";
 
 const TopBar: React.FC = () => {
-    // actions (stable function references are fine)
     const image             = useStore((s) => s.image);
     const addTextLayer      = useStore((s) => s.addTextLayer);
     const duplicateSelected = useStore((s) => s.duplicateSelected);
@@ -13,7 +12,6 @@ const TopBar: React.FC = () => {
     const redo              = useStore((s) => s.redo);
     const reset             = useStore((s) => s.reset);
 
-    // ✅ pure, derived selectors — DO NOT call methods in selectors
     const pastLen    = useStore((s) => s.history.past.length);
     const futureLen  = useStore((s) => s.history.future.length);
     const canUndo    = pastLen > 0;

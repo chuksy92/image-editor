@@ -18,10 +18,10 @@ export interface TextLayer {
     height: number;
     fontStyle: "normal" | "bold" | "italic" | "bold italic";
     align: Align;
-    opacity: number; // 0..1
-    locked: boolean;          // 👈 NEW
-    lineHeight: number;       // 👈 NEW (e.g., 1.2)
-    letterSpacing: number;    // 👈 NEW (px)
+    opacity: number;
+    locked: boolean;
+    lineHeight: number;
+    letterSpacing: number;
 }
 
 export interface CustomFont {
@@ -100,7 +100,7 @@ interface EditorState {
     reset: () => void;
 }
 
-const STORAGE_KEY = "gemini-editor-v1";
+const STORAGE_KEY = "image-editor-v1";
 const MAX_HISTORY = 20;
 
 const makeId = (): string =>
@@ -123,9 +123,9 @@ const createDefaultTextLayer = (id: string): TextLayer => ({
     fontStyle: "normal",
     align: "left",
     opacity: 1,
-    locked: false,       // 👈 NEW default
-    lineHeight: 1.2,     // 👈 NEW default
-    letterSpacing: 0,     // 👈 NEW default
+    locked: false,
+    lineHeight: 1.2,
+    letterSpacing: 0,
 });
 
 // File -> data URL (so we can persist the image)
@@ -289,7 +289,6 @@ export const useStore = create<EditorState>()(
                     set({
                         layers: [...s.layers, newLayer],
                         selectedLayerId: id,
-                        // startDragId: id,              // 🔥 auto-grab the newly added layer
                     });
                 },
 
@@ -308,7 +307,6 @@ export const useStore = create<EditorState>()(
                     set({
                         layers: [...s.layers, copy],
                         selectedLayerId: id,
-                        // startDragId: id,          // ✅ triggers auto-grab on the duplicated layer
                     });
                 },
 

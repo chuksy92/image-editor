@@ -12,7 +12,7 @@ import TextInspector from "@/components/panels/TextInspector";
 const EditorApp: React.FC = () => {
     const { image, canvasDimensions } = useStore();
 
-    // Optional: revoke uploaded font URLs on unmount (nice memory hygiene)
+    // revoke uploaded font URLs on unmount.
     useEffect(() => {
         return () => {
             const { customFonts } = useStore.getState();
@@ -22,12 +22,12 @@ const EditorApp: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col">
-            {/* Top bar */}
+
             <div className="sticky top-0 z-30 backdrop-blur border-b border-gray-600">
                 <TopBar />
             </div>
 
-            {/* Main content grid */}
+
             <div className="mx-auto w-full max-w-7xl flex-1 grid grid-cols-12 gap-4 p-4">
 
                 {/* Left sidebar */}

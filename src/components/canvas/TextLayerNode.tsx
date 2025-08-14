@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Group, Rect, Text, Transformer } from "react-konva";
-import Konva from "konva";
+import type { Group as KonvaGroup } from "konva/lib/Group";
+import type { Transformer as KonvaTransformer } from "konva/lib/shapes/Transformer";
+import type { KonvaEventObject } from "konva/lib/Node";
 import { TextLayer, useStore } from "@/hooks/useStore";
 
 type Props = { layer: TextLayer; isSelected: boolean; onSelect: () => void };
@@ -9,8 +11,8 @@ const HIT_PAD = 8;
 const TEXT_MIN_SIZE = 20;
 
 const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
-    const groupRef = useRef<Konva.Group>(null);
-    const trRef = useRef<Konva.Transformer>(null);
+    const groupRef = useRef<KonvaGroup>(null);
+    const trRef = useRef<KonvaTransformer>(null);
     const rafIdRef = useRef<number | null>(null);
 
     // live (no history) during drag, commit (with history) on end
@@ -39,7 +41,7 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
     }, [isSelected]);
 
     // Press to select and start drag immediately
-    const handleMouseDown = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+    const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
         e.cancelBubble = true; // don't let Stage onMouseDown deselect
         const g = groupRef.current;
         if (!g) return;
