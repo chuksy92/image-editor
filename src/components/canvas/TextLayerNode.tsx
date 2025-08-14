@@ -28,15 +28,7 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
         );
     }, []);
 
-    // Bind transformer when selected
-    useEffect(() => {
-        if (!isSelected) return;
-        const tr = trRef.current;
-        const g  = groupRef.current;
-        if (!tr || !g) return;
-        tr.nodes([g]);
-        tr.getLayer()?.batchDraw();
-    }, [isSelected]);
+
 
     // Press to select and start drag immediately
     const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
@@ -123,6 +115,16 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
     const groupPosProps = { x: layer.x, y: layer.y };
     const draggable = !layer.locked;
     const listening = !layer.locked;
+
+    // Bind transformer when selected
+    useEffect(() => {
+        if (!isSelected) return;
+        const tr = trRef.current;
+        const g  = groupRef.current;
+        if (!tr || !g) return;
+        tr.nodes([g]);
+        tr.getLayer()?.batchDraw();
+    }, [isSelected]);
 
     return (
         <>

@@ -46,39 +46,6 @@ const CanvasComponent: React.FC = () => {
         };
     }, []);
 
-    /**
-     * Handle image load: create an object URL, size the canvas to the PNG,
-     * and revoke the URL on cleanup to prevent leaks.
-     */
-    useEffect(() => {
-        if (!image) {
-            setImageObject(null);
-            setCanvasDimensions({ width: 0, height: 0 });
-            return;
-        }
-
-        const url = URL.createObjectURL(image);
-        const img = new window.Image();
-        img.src = url;
-
-        img.onload = () => {
-            setImageObject(img);
-            setCanvasDimensions({width: img.width, height: img.height});
-        };
-
-        return () => {
-            img.onload = null;
-            URL.revokeObjectURL(url);
-        };
-    }, [image, setCanvasDimensions, setImageObject]);
-
-    // Batch a redraw whenever layer geometry changes (refresh Konva's hit graph).
-    useEffect(() => {
-        const id = requestAnimationFrame(() => stageRef.current?.batchDraw());
-        return () => cancelAnimationFrame(id);
-    }, [layers]);
-
-
 
     /**
      * Deselect when clicking the true background (the Stage).
@@ -155,11 +122,6 @@ const CanvasComponent: React.FC = () => {
         [deleteSelected, duplicateSelected, selectedLayerId]
     );
 
-    useEffect(() => {
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [onKeyDown]);
-
     // Guard stage size to avoid NaN/0 flashes before image is ready.
     const stageSize = useMemo(
         () => ({
@@ -168,6 +130,44 @@ const CanvasComponent: React.FC = () => {
         }),
         [imageObject?.width, imageObject?.height]
     );
+
+    useEffect(() => {
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [onKeyDown]);
+
+
+    /**
+     * Handle image load: create an object URL, size the canvas to the PNG,
+     * and revoke the URL on cleanup to prevent leaks.
+     */
+    useEffect(() => {
+        if (!image) {
+            setImageObject(null);
+            setCanvasDimensions({ width: 0, height: 0 });
+            return;
+        }
+
+        const url = URL.createObjectURL(image);
+        const img = new window.Image();
+        img.src = url;
+
+        img.onload = () => {
+            setImageObject(img);
+            setCanvasDimensions({width: img.width, height: img.height});
+        };
+
+        return () => {
+            img.onload = null;
+            URL.revokeObjectURL(url);
+        };
+    }, [image, setCanvasDimensions, setImageObject]);
+
+    // Batch a redraw whenever layer geometry changes (refresh Konva's hit graph).
+    useEffect(() => {
+        const id = requestAnimationFrame(() => stageRef.current?.batchDraw());
+        return () => cancelAnimationFrame(id);
+    }, [layers]);
 
     return (
         <Stage
