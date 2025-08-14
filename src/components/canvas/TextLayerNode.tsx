@@ -24,9 +24,7 @@ const TextLayerNode: React.FC<Props> = ({ layer, isSelected, onSelect }) => {
         if (!el) return;
         el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
         el.classList.add(
-            cursor === "grabbing" ? "konva-cursor-grabbing" :
-                cursor === "grab"     ? "konva-cursor-grab" :
-                    "konva-cursor-default"
+            cursor === "grabbing" ? "konva-cursor-grabbing" : cursor === "grab" ? "konva-cursor-grab" : "konva-cursor-default"
         );
     }, []);
 

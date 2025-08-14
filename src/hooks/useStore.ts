@@ -310,7 +310,6 @@ export const useStore = create<EditorState>()(
                     });
                 },
 
-                // 👇 NEW: live updater (NO history) for smooth dragging
                 updateTextLayerLive: (patch) => {
                     set((s) => ({
                         layers: s.layers.map((l) => (l.id === patch.id ? { ...l, ...patch } : l)),

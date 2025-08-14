@@ -5,7 +5,7 @@
  */
 export type LoadedFont = {
     family: string;
-    url: string; // object URL created for the file
+    url: string;
 };
 
 const SUPPORTED_EXTENSIONS = new Set(["ttf", "otf", "woff", "woff2"]);
@@ -26,7 +26,6 @@ export async function loadCustomFontFromFile(file: File, familyOverride?: string
     const family = familyOverride?.trim() || inferFamilyName(file.name);
     const url = URL.createObjectURL(file);
 
-    // FontFace is part of the DOM lib, so no `any` is needed
     const fontFace = new FontFace(family, `url(${url})`);
 
     // load + register
@@ -36,5 +35,3 @@ export async function loadCustomFontFromFile(file: File, familyOverride?: string
     return { family, url };
 }
 
-
-loadCustomFontFromFile
