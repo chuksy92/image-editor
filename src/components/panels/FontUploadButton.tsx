@@ -3,7 +3,6 @@
 import React, { useRef } from "react";
 import { useStore } from "@/hooks/useStore";
 import { loadCustomFontFromFile } from "@/lib/loadCustomFont";
-import { toast } from "react-hot-toast";
 
 type Props = {
     className?: string;
@@ -23,10 +22,10 @@ const FontUploadButton: React.FC<Props> = ({ className, label = "Upload font (TT
         try {
             const loaded = await loadCustomFontFromFile(file);
             addCustomFont({ family: loaded.family, url: loaded.url });
-            toast.success(`Loaded font: ${loaded.family}`);
+            alert(`Loaded font: ${loaded.family}`);
         } catch (err) {
             const msg = err instanceof Error ? err.message : "Failed to load font.";
-            toast.error(msg);
+            alert(msg);
         } finally {
             // allow re-selecting the same file
             if (inputRef.current) inputRef.current.value = "";

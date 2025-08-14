@@ -7,17 +7,42 @@ const ImageUpload = () => {
     const [dragOver, setDragOver] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const onFile = (file?: File) => {
+    // Cap uploads at 15 MB
+    const MAX_BYTES = 15 * 1024 * 1024;
+
+    const isPng = (file: File) =>
+        file.type === "image/png" || /\.png$/i.test(file.name);
+
+    const onFile = async (file?: File) => {
         if (!file) return;
-        if (file.type !== "image/png") {
-            // Could use a toast for proper UX
+
+        // Type check
+        if (!isPng(file)) {
             alert("Please upload a PNG image.");
+            if (inputRef.current) inputRef.current.value = "";
             return;
         }
-        setImage(file);
-        // allow selecting the same file again
-        if (inputRef.current) inputRef.current.value = "";
+
+        // Size check
+        if (file.size > MAX_BYTES) {
+            const mb = (MAX_BYTES / (1024 * 1024)).toFixed(0);
+            alert(`Image is too large. Max ${mb} MB.`);
+            if (inputRef.current) inputRef.current.value = "";
+            return;
+        }
+
+        try {
+            await setImage(file); // setImage from your store is async
+
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Failed to load image.";
+            alert(msg);
+        } finally {
+            // allow selecting the same file again
+            if (inputRef.current) inputRef.current.value = "";
+        }
     };
+
 
     return (
         <div
@@ -26,10 +51,10 @@ const ImageUpload = () => {
                 setDragOver(true);
             }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
+            onDrop={async (e) => {
                 e.preventDefault();
                 setDragOver(false);
-                onFile(e.dataTransfer.files?.[0]);
+                await onFile(e.dataTransfer.files?.[0]);
             }}
             className={`relative grid min-h-[60vh] w-full place-items-center rounded-2xl border-4 border-dashed p-12 transition ${
                 dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50 hover:border-blue-400"
