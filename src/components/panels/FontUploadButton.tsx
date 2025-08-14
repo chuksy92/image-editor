@@ -38,7 +38,7 @@ const FontUploadButton: React.FC<Props> = ({ className, label = "Upload font (TT
             <button
                 type="button"
                 onClick={onPick}
-                className={className ?? "px-3 py-2 text-sm rounded border hover:bg-gray-50"}
+                className={className ?? "px-3 py-2 text-sm rounded border text-slate-500 cursor-pointer"}
             >
                 {label}
             </button>
