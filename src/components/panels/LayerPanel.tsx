@@ -65,7 +65,7 @@ const LayerPanel = () => {
                         onDrop={(e) => handleDrop(e, l.id)}
                         onClick={() => handleClick(l.id)}
                         className={`flex cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm transition ${
-                            selectedLayerId === l.id ? "border-blue-500 bg-blue-600" : "border-transparent bg-black "
+                            selectedLayerId === l.id ? "border-blue-500 bg-blue-600" : "border-transparent bg-slate-500 "
                         }`}
                         title="Drag to reorder, click to select"
                     >
