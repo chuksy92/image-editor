@@ -9,7 +9,7 @@ const EditorApp = dynamic(() => import("@/components/EditorApp"), {
     // Optional: show something if the editor itself is still loading
     loading: () => (
         <div className="flex min-h-screen items-center justify-center">
-            <div className="rounded-xl border bg-white px-6 py-4 shadow">Loading editor…</div>
+            <div className="rounded-xl border px-6 py-4 shadow">Loading editor…</div>
         </div>
     ),
 });
@@ -23,7 +23,7 @@ async function loadWebFontsWithTimeout(timeoutMs = 5000): Promise<void> {
             WebFont.load({
                 google: { families: getFontFamilies() },
                 active: () => resolve(),
-                inactive: () => resolve(), // resolve even if fonts fail (don’t block the app)
+                inactive: () => resolve(),
             });
         });
 

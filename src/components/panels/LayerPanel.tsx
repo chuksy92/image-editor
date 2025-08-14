@@ -6,7 +6,8 @@ const LayerPanel = () => {
         layers,
         reorderLayers,
         selectedLayerId,
-        setSelectedLayer
+        setSelectedLayer,
+        toggleLayerLock
     } = useStore();
 
     const isReordering = useRef(false);
@@ -45,6 +46,11 @@ const LayerPanel = () => {
         setSelectedLayer(id);            // ✅ select only; dragging starts on canvas click
     };
 
+    if (!layers.length) {
+        return <div className="p-3 text-sm text-slate-500">No layers yet.</div>;
+    }
+
+
     return (
         <div className="max-h-[calc(100vh-140px)] overflow-auto rounded-lg bg-white p-4 shadow">
             <div className="mb-3 text-sm font-semibold text-slate-500">Layers</div>
@@ -59,11 +65,23 @@ const LayerPanel = () => {
                         onDrop={(e) => handleDrop(e, l.id)}
                         onClick={() => handleClick(l.id)}
                         className={`flex cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm transition ${
-                            selectedLayerId === l.id ? "border-blue-500 bg-blue-600" : "border-transparent bg-black hover:bg-gray-200"
+                            selectedLayerId === l.id ? "border-blue-500 bg-blue-600" : "border-transparent bg-black "
                         }`}
                         title="Drag to reorder, click to select"
                     >
-                        <span className="truncate">{l.text || `Layer ${l.id.slice(0, 4)}`}</span>
+                        <div className="truncate">
+                            {l.locked ? "🔒 " : ""}{l.text || ""}{" "}
+                            <span className="opacity-50">· {Math.round(l.x)},{Math.round(l.y)}</span>
+                        </div>
+                        <button
+                            className="text-xs px-2 py-1 rounded border"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleLayerLock(l.id);
+                            }}
+                        >
+                            {l.locked ? "Unlock" : "Lock"}
+                        </button>
                     </li>
                 ))}
             </ul>

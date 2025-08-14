@@ -21,6 +21,7 @@ const CanvasComponent: React.FC = () => {
         selectedLayerId,
         setCanvasDimensions,
         setSelectedLayer,
+        setSelectedAndPrimeDrag,
         setStageRef,
         setImageObject,
         deleteSelected,
@@ -33,6 +34,16 @@ const CanvasComponent: React.FC = () => {
     useEffect(() => {
         if (stageRef.current) setStageRef(stageRef);
     }, [setStageRef]);
+
+    useEffect(() => {
+        const el = stageRef.current?.container();
+        if (!el) return;
+        // start with default cursor
+        el.classList.add("konva-cursor-default");
+        return () => {
+            el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
+        };
+    }, []);
 
     /**
      * Handle image load: create an object URL, size the canvas to the PNG,
@@ -67,15 +78,14 @@ const CanvasComponent: React.FC = () => {
         return () => cancelAnimationFrame(id);
     }, [layers]);
 
-    useEffect(() => {
-        const el = stageRef.current?.container();
-        if (!el) return;
-        // start with default cursor
-        el.classList.add("konva-cursor-default");
-        return () => {
-            el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
-        };
-    }, []);
+
+    //
+    // useEffect(() => {
+    //     const el = stageRef.current?.container();
+    //     if (!el) return;
+    //     el.classList.remove("konva-cursor-default", "konva-cursor-grab", "konva-cursor-grabbing");
+    //     el.classList.add("konva-cursor-default");
+    // }, []);
 
     /**
      * Deselect when clicking the true background (the Stage).

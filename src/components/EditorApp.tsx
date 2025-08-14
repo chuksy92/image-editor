@@ -1,65 +1,3 @@
-// import React, {useEffect} from "react";
-// import { useStore } from "@/hooks/useStore";
-// import CanvasComponent from "./canvas/CanvasComponent";
-// import ImageUpload from "./upload/ImageUpload";
-// import LayerPanel from "./panels/LayerPanel";
-// import PropertiesPanel from "./panels/PropertiesPanel";
-// import TopBar from "./panels/TopBar";
-//
-// const EditorApp = () => {
-//     const { image, canvasDimensions } = useStore();
-//
-//     useEffect(() => {
-//         const { customFonts } = useStore.getState();
-//         return () => {
-//             customFonts.forEach(f => URL.revokeObjectURL(f.url));
-//         };
-//     }, []);
-//
-//     return (
-//         <div className="min-h-screen">
-//             <TopBar />
-//             <div className={`${image ? "hidden" : "m-3 text-xl font-extrabold text-center gradient-text"}`}>
-//                 Upload your image — edit, move, and style text effortlessly.
-//             </div>
-//             <div className="mx-auto flex max-w-7xl gap-4 p-4">
-//                 {/* Left: layers */}
-//                 <aside className="hidden w-64 shrink-0 lg:block">
-//                     <LayerPanel />
-//                 </aside>
-//
-//                 {/* Center: canvas or uploader */}
-//                 <main className="flex min-h-[70vh] flex-1 items-start justify-center">
-//                     {image ? (
-//                         <div
-//                             className="overflow-auto rounded-xl border-2 border-gray-200 bg-white p-2 shadow"
-//                             style={{ maxWidth: "100%", maxHeight: "calc(100vh - 180px)" }}
-//                         >
-//                             <div
-//                                 className="inline-block rounded"
-//                                 style={{
-//                                     width: canvasDimensions.width,
-//                                     height: canvasDimensions.height
-//                                 }}
-//                             >
-//                                 <CanvasComponent />
-//                             </div>
-//                         </div>
-//                     ) : (
-//                         <ImageUpload />
-//                     )}
-//                 </main>
-//
-//                 {/* Right: properties */}
-//                 <aside className="hidden w-80 shrink-0 xl:block">
-//                     <PropertiesPanel />
-//                 </aside>
-//             </div>
-//         </div>
-//     );
-// };
-//
-// export default EditorApp;
 
 import React, { useEffect } from "react";
 import { useStore } from "@/hooks/useStore";
@@ -69,6 +7,7 @@ import StylePanel from "./panels/StylePanel";
 import PropertiesPanel from "./panels/PropertiesPanel";
 import TopBar from "./panels/TopBar";
 import ImageUpload from "@/components/upload/ImageUpload";
+import TextInspector from "@/components/panels/TextInspector";
 
 const EditorApp: React.FC = () => {
     const { image, canvasDimensions } = useStore();
@@ -96,6 +35,10 @@ const EditorApp: React.FC = () => {
                     <div className="sticky top-20 space-y-4">
                         <div className="rounded-xl border bg-white shadow-sm p-4">
                             <LayerPanel />
+                        </div>
+
+                        <div className="rounded-xl border bg-white shadow-sm p-4">
+                            <TextInspector />
                         </div>
 
                         <div className="rounded-xl border bg-white shadow-inner p-4">
