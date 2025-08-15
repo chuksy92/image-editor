@@ -1,4 +1,4 @@
-## Image Text Editor (React + Konva)
+## Image Text Editor (NextJs + Konva)
 
 Edit text layers on top of an uploaded PNG and export a final image at original dimensions. Built with React, react-konva/Konva, and Zustand.
 
