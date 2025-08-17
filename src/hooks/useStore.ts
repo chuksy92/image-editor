@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, subscribeWithSelector } from "zustand/middleware";
+import {createJSONStorage, persist, subscribeWithSelector} from "zustand/middleware";
 import type Konva from "konva";
 import type React from "react";
 
@@ -396,8 +396,25 @@ export const useStore = create<EditorState>()(
                 layers: s.layers,
                 selectedLayerId: s.selectedLayerId,
                 customFonts: s.customFonts,
-                history: s.history, // keep history across reloads
+                history: s.history,
+
             }),
+            storage: createJSONStorage(() => ({
+                getItem: (key: string) => localStorage.getItem(key),
+                setItem: (key: string, value: string) => {
+                    try {
+                        localStorage.setItem(key, value);
+                    } catch (err) {
+                        if (isQuotaError(err)) {
+                            alert(
+                                "⚠️ Your image is too large to be autosaved.\n\nAutosave has been temporarily disabled for this session because the browser's storage limit was exceeded.\n\n✅ To fix this, please upload a smaller image or reduce the file size before trying again.");
+                        } else {
+                            throw err;
+                        }
+                    }
+                },
+                removeItem: (key: string) => localStorage.removeItem(key),
+            })),
             version: 1,
             onRehydrateStorage: () => (state) => {
                 // rebuild imageObject after we hydrate persisted imageDataUrl
@@ -414,3 +431,10 @@ export const useStore = create<EditorState>()(
         }
     )
 );
+
+function isQuotaError(err: unknown) {
+    return (
+        err instanceof DOMException &&
+        (err.name === "QuotaExceededError" || err.name === "NS_ERROR_DOM_QUOTA_REACHED")
+    );
+}
