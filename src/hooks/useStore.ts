@@ -1,112 +1,17 @@
 import { create } from "zustand";
-import {createJSONStorage, persist, subscribeWithSelector} from "zustand/middleware";
-import type Konva from "konva";
-import type React from "react";
+import { createJSONStorage, persist, subscribeWithSelector } from "zustand/middleware";
 
-export type Align = "left" | "center" | "right";
 
-export interface TextLayer {
-    id: string;
-    x: number;
-    y: number;
-    text: string;
-    fontSize: number;
-    fontFamily: string;
-    fill: string;
-    rotation: number;
-    width: number;
-    height: number;
-    fontStyle: "normal" | "bold" | "italic" | "bold italic";
-    align: Align;
-    opacity: number;
-    locked: boolean;
-    lineHeight: number;
-    letterSpacing: number;
-}
+import type {
+    EditorState,
+    EditorSnapshot,
+    TextLayer,
+} from "@/types/editor";
 
-export interface CustomFont {
-    family: string;
-    url: string;
-}
-
-type EditorSnapshot = {
-    imageDataUrl: string | null;
-    canvasDimensions: { width: number; height: number };
-    layers: TextLayer[];
-    selectedLayerId: string | null;
-    customFonts: CustomFont[];
-};
-
-interface History {
-    past: { snap: EditorSnapshot; label?: string }[];
-    present: EditorSnapshot;
-    future: { snap: EditorSnapshot; label?: string }[];
-}
-
-interface EditorState {
-    // Canvas / image (runtime)
-    image: File | null;
-    imageObject: HTMLImageElement | null;
-    canvasDimensions: { width: number; height: number };
-    stageRef: React.RefObject<Konva.Stage | null> | null;
-
-    // Persisted image data
-    imageDataUrl: string | null;
-
-    // Layers
-    layers: TextLayer[];
-    selectedLayerId: string | null;
-    setSelectedAndPrimeDrag: (id: string) => void;
-
-    // Fonts
-    customFonts: CustomFont[];
-    addCustomFont: (font: CustomFont) => void;
-
-    // Drag priming
-    startDragId: string | null;
-    clearStartDrag: () => void;
-
-    // History
-    history: History;
-    canUndo: () => boolean;
-    canRedo: () => boolean;
-    historyCounts: () => { back: number; forward: number };
-    pushHistory: (label?: string) => void;
-    undo: () => void;
-    redo: () => void;
-
-    toggleLayerLock: (id: string) => void;
-    setLayerLock: (id: string, locked: boolean) => void;
-
-    // Setters / refs
-    setImage: (file: File | null) => Promise<void>;
-    setImageObject: (img: HTMLImageElement | null) => void;
-    setCanvasDimensions: (d: { width: number; height: number }) => void;
-    setStageRef: (ref: React.RefObject<Konva.Stage | null>) => void;
-
-    // Layer ops
-    addTextLayer: () => void;
-    updateTextLayerLive: (patch: Partial<TextLayer> & { id: string }) => void; // 👈 NEW (no history)
-    updateTextLayer: (patch: Partial<TextLayer> & { id: string }) => void;      // commit (history)
-    setSelectedLayer: (id: string | null) => void;
-    reorderLayers: (newLayers: TextLayer[]) => void;
-    deleteSelected: () => void;
-    duplicateSelected: () => void;
-
-    // Export
-    exportImage: () => void;
-
-    // Reset (clear autosave + memory)
-    reset: () => void;
-}
+import { makeId, fileToDataUrl, createSafeLocalStorage } from "@/lib";
 
 const STORAGE_KEY = "image-editor-v1";
 const MAX_HISTORY = 20;
-
-const makeId = (): string =>
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2);
 
 
 const createDefaultTextLayer = (id: string): TextLayer => ({
@@ -128,15 +33,6 @@ const createDefaultTextLayer = (id: string): TextLayer => ({
     letterSpacing: 0,
 });
 
-// File -> data URL (so we can persist the image)
-const fileToDataUrl = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-
 const takeSnapshot = (s: EditorState): EditorSnapshot => ({
     imageDataUrl: s.imageDataUrl,
     canvasDimensions: s.canvasDimensions,
@@ -148,7 +44,6 @@ const takeSnapshot = (s: EditorState): EditorSnapshot => ({
 export const useStore = create<EditorState>()(
     persist(
         subscribeWithSelector((set, get) => {
-            // ---- Initial snapshot (blank) ----
             const emptySnap: EditorSnapshot = {
                 imageDataUrl: null,
                 canvasDimensions: { width: 0, height: 0 },
@@ -201,7 +96,6 @@ export const useStore = create<EditorState>()(
                 pushHistory: (label) => {
                     const h = get().history;
                     const curr = takeSnapshot(get());
-                    // move current present into past; set present = curr; clear future
                     const past = [...h.past, { snap: h.present, label }];
                     const trimmed = past.length > MAX_HISTORY ? past.slice(past.length - MAX_HISTORY) : past;
                     set({ history: { past: trimmed, present: curr, future: [] } });
@@ -211,7 +105,7 @@ export const useStore = create<EditorState>()(
                     const h = get().history;
                     if (h.past.length === 0) return;
                     const past = [...h.past];
-                    const prev = past.pop()!; // last
+                    const prev = past.pop()!;
                     const future = [{ snap: h.present }, ...h.future];
                     const snap = prev.snap;
 
@@ -230,7 +124,7 @@ export const useStore = create<EditorState>()(
                     const h = get().history;
                     if (h.future.length === 0) return;
                     const future = [...h.future];
-                    const next = future.shift()!; // first
+                    const next = future.shift()!;
                     const past = [...h.past, { snap: h.present }];
                     const snap = next.snap;
 
@@ -252,7 +146,6 @@ export const useStore = create<EditorState>()(
 
                 setImage: async (file) => {
                     if (!file) {
-                        // clear image
                         set({
                             image: null,
                             imageDataUrl: null,
@@ -297,11 +190,7 @@ export const useStore = create<EditorState>()(
                     const src = s.layers.find((l) => l.id === s.selectedLayerId);
                     if (!src) return;
 
-                    const id = (typeof crypto !== "undefined" && "randomUUID" in crypto)
-                        ? crypto.randomUUID()
-                        : Math.random().toString(36).slice(2);
-
-                    // offset the copy a bit so it's visible
+                    const id = makeId();
                     const copy: TextLayer = { ...src, id, x: src.x + 24, y: src.y + 24 };
 
                     set({
@@ -316,7 +205,6 @@ export const useStore = create<EditorState>()(
                     }));
                 },
 
-                // Commit updater (WITH history)
                 updateTextLayer: (patch) => {
                     get().pushHistory("update text");
                     set((s) => ({
@@ -397,27 +285,10 @@ export const useStore = create<EditorState>()(
                 selectedLayerId: s.selectedLayerId,
                 customFonts: s.customFonts,
                 history: s.history,
-
             }),
-            storage: createJSONStorage(() => ({
-                getItem: (key: string) => localStorage.getItem(key),
-                setItem: (key: string, value: string) => {
-                    try {
-                        localStorage.setItem(key, value);
-                    } catch (err) {
-                        if (isQuotaError(err)) {
-                            alert(
-                                "⚠️ Your image is too large to be autosaved.\n\nAutosave has been temporarily disabled for this session because the browser's storage limit was exceeded.\n\n✅ To fix this, please upload a smaller image or reduce the file size before trying again.");
-                        } else {
-                            throw err;
-                        }
-                    }
-                },
-                removeItem: (key: string) => localStorage.removeItem(key),
-            })),
+            storage: createJSONStorage(createSafeLocalStorage),
             version: 1,
             onRehydrateStorage: () => (state) => {
-                // rebuild imageObject after we hydrate persisted imageDataUrl
                 const dataUrl = state?.imageDataUrl ?? null;
                 if (dataUrl) {
                     const img = new window.Image();
@@ -431,10 +302,3 @@ export const useStore = create<EditorState>()(
         }
     )
 );
-
-function isQuotaError(err: unknown) {
-    return (
-        err instanceof DOMException &&
-        (err.name === "QuotaExceededError" || err.name === "NS_ERROR_DOM_QUOTA_REACHED")
-    );
-}
