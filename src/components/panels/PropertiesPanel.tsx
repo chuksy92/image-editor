@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Align, TextLayer, useStore } from "@/hooks/useStore";
+import { useStore } from "@/hooks/useStore";
+import { TextLayer, Align} from "@/types/editor";
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 

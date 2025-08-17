@@ -3,7 +3,8 @@ import { Group, Rect, Text, Transformer } from "react-konva";
 import type { Group as KonvaGroup } from "konva/lib/Group";
 import type { Transformer as KonvaTransformer } from "konva/lib/shapes/Transformer";
 import type { KonvaEventObject } from "konva/lib/Node";
-import { TextLayer, useStore } from "@/hooks/useStore";
+import {  useStore } from "@/hooks/useStore";
+import { TextLayer} from "@/types/editor";
 
 type Props = { layer: TextLayer; isSelected: boolean; onSelect: () => void };
 

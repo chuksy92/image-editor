@@ -3,7 +3,8 @@
 import React, { useMemo } from "react";
 import { useStore } from "@/hooks/useStore";
 import { getFontFamilies } from "@/lib/fonts";
-import type { TextLayer } from "@/hooks/useStore";
+import { TextLayer} from "@/types/editor";
+
 
 const FontFamilySelect: React.FC<{ layer: TextLayer }> = ({ layer }) => {
     const update = useStore((s) => s.updateTextLayer);
